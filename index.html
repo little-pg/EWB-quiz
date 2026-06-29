@@ -618,7 +618,7 @@
                     <div id="progress-fill" class="progress-fill" style="width:0%"></div>
                 </div>
             </div>
-            <span id="score-display" class="score-badge">0 คะแนน</span>
+            <span id="score-display" class="score-badge hidden">0 คะแนน</span>
         </div>
     </div>
 
@@ -801,7 +801,6 @@ function renderQuestion() {
     const total = shuffledQuiz.length;
     document.getElementById('question-number').innerText = `${currentQ+1} / ${total}`;
     document.getElementById('progress-fill').style.width = `${((currentQ+1)/total)*100}%`;
-    document.getElementById('score-display').innerText = `${score} คะแนน`;
     document.getElementById('question-text').innerText = data.q;
 
     const imgEl = document.getElementById('scene-image');
@@ -852,9 +851,20 @@ async function showFinalResult() {
 
 async function saveToFirebase(pct) {
     const cfg = FANDOM_CONFIG[selFandom]; if (!cfg) return;
+    const safePct = Math.min(100, Math.max(0, Math.round(pct)));
     try {
-        await db.ref(`quiz_stats/teams/${cfg.key}`).transaction(c => c===null ? {count:1,totalPct:pct} : {count:c.count+1,totalPct:c.totalPct+pct});
-        await db.ref('quiz_stats/global').transaction(c => c===null ? {totalPlayers:1,totalPct:pct} : {totalPlayers:c.totalPlayers+1,totalPct:c.totalPct+pct});
+        await db.ref(`quiz_stats/teams/${cfg.key}`).transaction(c => {
+            if (c === null) return { count: 1, totalPct: safePct };
+            const prevTotal = typeof c.totalPct === 'number' && isFinite(c.totalPct) ? c.totalPct : 0;
+            const prevCount = typeof c.count    === 'number' && isFinite(c.count)    ? c.count    : 0;
+            return { count: prevCount + 1, totalPct: prevTotal + safePct };
+        });
+        await db.ref('quiz_stats/global').transaction(c => {
+            if (c === null) return { totalPlayers: 1, totalPct: safePct };
+            const prevTotal = typeof c.totalPct     === 'number' && isFinite(c.totalPct)     ? c.totalPct     : 0;
+            const prevCount = typeof c.totalPlayers === 'number' && isFinite(c.totalPlayers) ? c.totalPlayers : 0;
+            return { totalPlayers: prevCount + 1, totalPct: prevTotal + safePct };
+        });
     } catch(e) { console.error(e); }
 }
 
@@ -866,9 +876,11 @@ async function renderLeaderboard() {
         const data  = snap.val() || {};
         const teams = data.teams || {};
         const rows  = Object.entries(FANDOM_CONFIG).map(([name, cfg]) => {
-            const t   = teams[cfg.key] || { count:0, totalPct:0 };
-            const avg = t.count>0 ? Math.round(t.totalPct/t.count) : 0;
-            return { name, cfg, avg, count:t.count };
+            const t      = teams[cfg.key] || {};
+            const count  = typeof t.count    === 'number' && isFinite(t.count)    ? t.count    : 0;
+            const total  = typeof t.totalPct === 'number' && isFinite(t.totalPct) ? t.totalPct : 0;
+            const avg    = count > 0 ? Math.round(total / count) : 0;
+            return { name, cfg, avg, count };
         }).sort((a,b) => b.avg-a.avg || b.count-a.count);
         const maxAvg = rows[0]?.avg || 1;
         const champ  = rows[0];
