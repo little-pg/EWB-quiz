@@ -832,10 +832,10 @@ async function showFinalResult() {
     const total = shuffledQuiz.length;
     const pct   = Math.round((score/total)*100);
     let title='', desc='', emoji='';
-    if      (pct===100) { emoji='👸'; title='คนเขียนบทปลอมตัวมา';  desc='เก่งมาก มหัศจรรย์! คุณคือร่างอวตารของคนเขียนบทตัวจริง'; }
-    else if (pct>=80)   { emoji='👑'; title='มือรองคนเขียนบท';      desc='แม่นยำระดับมือโปร! อีกนิดเดียวก็สมบูรณ์แบบแล้ว'; }
-    else if (pct>=50)   { emoji='🍿'; title='ผู้ชมสายชิลล์';        desc='เริ่มคุ้นตาแล้วสิ! ลองทวนอีกรอบรับรองจำแม่นแน่นอน'; }
-    else                { emoji='✍️'; title='ไรเต้อท่านนึง';        desc='สายมโนตัวจริง! บทพล็อตของคุณไปไกลกว่าต้นฉบับแล้ว'; }
+    if      (pct===100) { emoji='👸'; title='สุดยอดเแฟนพันธุ์แท้';  desc='เก่งมาก มหัศจรรย์! คุณตกหลุมรักเรื่องลมชวแล้วล่ะ la la la love u'; }
+    else if (pct>=80)   { emoji='👑'; title='แฟนตัวยง';      desc='อยู่ในระยะใกล้แล้วที่จะตอบถูกนะะ'; }
+    else if (pct>=50)   { emoji='🥴'; title='แฟนคลับครับผม';        desc='มันคงเป็นไปไม่ได้ใช่ไหม ที่ฉันจะตอบถูกทุกอย่าง'; }
+    else                { emoji='😵'; title='นักดูสายชิล';        desc='Wine I can’t remember anything'; }
     resTitle=title; resEmoji=emoji;
     document.getElementById('result-emoji').innerText       = emoji;
     document.getElementById('result-title').innerText       = title;
