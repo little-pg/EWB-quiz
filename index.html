@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EWB Series</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <style>
+        :root {
+            --red:   #D42B2B;
+            --cream: #F5EDD6;
+            --blue:  #3B7DD8;
+            --black: #111111;
+            --white: #FFFFFF;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Mali', cursive;
+            background: var(--cream);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 1rem;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 480px;
+            padding: 1rem 0;
+        }
+
+        /* HIDDEN */
+        .hidden { display: none !important; }
+
+        /* HEADER STRIP */
+        .header-strip {
+            background: var(--red);
+            padding: 1.25rem 1.5rem;
+            border-radius: 1.25rem;
+            border: 2.5px solid var(--black);
+            box-shadow: 5px 5px 0 var(--black);
+            margin-bottom: 1rem;
+        }
+        .header-top { display: flex; align-items: flex-start; justify-content: space-between; }
+        .logo-mark {
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            font-size: 2.8rem;
+            color: var(--cream);
+            line-height: 1;
+        }
+        .tagline {
+            font-family: 'Mali', cursive;
+            font-weight: 600;
+            font-size: 0.6rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--cream);
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+        .header-right { text-align: right; }
+        .header-right .series-label {
+            font-family: 'Mali', cursive;
+            font-weight: 600;
+            font-size: 0.6rem;
+            color: var(--cream);
+            opacity: 0.7;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+        .header-right .quiz-label {
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--cream);
+            line-height: 1.2;
+        }
+
+        /* CARD */
+        .card {
+            background: var(--white);
+            border-radius: 1.25rem;
+            border: 2.5px solid var(--black);
+            box-shadow: 5px 5px 0 var(--black);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* INTRO TEXT */
+        .intro-center { text-align: center; margin-bottom: 1.25rem; }
+        .cat-float { display: inline-block; font-size: 3rem; margin-bottom: 0.5rem; animation: catFloat 3.5s ease-in-out infinite; }
+        @keyframes catFloat {
+            0%,100% { transform: translateY(0) rotate(-2deg); }
+            50%      { transform: translateY(-8px) rotate(2deg); }
+        }
+        .quiz-title {
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            font-size: 1.6rem;
+            color: var(--red);
+            line-height: 1.3;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            font-family: 'Mali', cursive;
+            font-weight: 600;
+            font-size: 0.65rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--red);
+            opacity: 0.7;
+            margin-bottom: 0.5rem;
+        }
+        .intro-desc { color: #555; font-size: 0.95rem; line-height: 1.6; }
+
+        /* TEAM SELECT BOX */
+        .team-select-box {
+            background: var(--cream);
+            border-radius: 1rem;
+            border: 2px solid var(--black);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .team-select-label {
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            font-size: 0.7rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--red);
+            margin-bottom: 0.75rem;
+            text-align: center;
+        }
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        /* TEAM BUTTON — no transform, simple background change */
+        .team-btn {
+            font-family: 'Mali', cursive;
+            background: var(--white);
+            border: 2.5px solid var(--black);
+            border-radius: 1rem;
+            padding: 0.85rem 0.5rem;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 3px 3px 0 var(--black);
+            transition: background 0.15s, color 0.15s;
+            display: block;
+            width: 100%;
+        }
+        .team-btn:hover { background: #f5f5f5; }
+        .team-btn.selected { background: var(--red); }
+        .team-btn.selected .team-name { color: var(--cream); }
+        .team-btn.selected .check-ring { background: var(--cream); color: var(--red); }
+
+        .team-emoji { font-size: 1.8rem; display: block; margin-bottom: 0.35rem; }
+        .team-name {
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            font-size: 0.78rem;
+            color: var(--black);
+            display: block;
+            margin-bottom: 0.4rem;
+        }
+        .check-ring {
+            width: 1.4rem; height: 1.4rem; border-radius: 50%;
+            border: 2px solid var(--black);
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 0.65rem; font-weight: 700;
+            background: var(--cream);
+            color: var(--black);
+        }
+
+        .select-hint {
+            text-align: center;
+            color: var(--red);
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            opacity: 0.7;
+        }
+
+        /* PRIMARY BUTTON */
+        .btn-primary {
+            font-family: 'Mali', cursive;
+            width: 100%;
+            padding: 1rem;
+            border-radius: 9999px;
+            border: 2.5px solid var(--black);
+            background: var(--red);
+            color: var(--cream);
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 4px 4px 0 var(--black);
+            transition: box-shadow 0.15s, background 0.15s;
+        }
+        .btn-primary:disabled { background: #ccc; color: #888; cursor: not-allowed; box-shadow: 2px 2px 0 #aaa; }
+        .btn-primary:not(:disabled):hover { background: var(--red); box-shadow: 6px 6px 0 var(--black); }
+
+        /* QUIZ SCREEN */
+        .quiz-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .q-number {
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--cream);
+        }
+        .progress-wrap { flex: 1; margin: 0 1rem; }
+        .progress-track {
+            background: rgba(255,255,255,0.25);
+            border-radius: 9999px;
+            height: 8px;
+            overflow: hidden;
+            border: 1.5px solid rgba(255,255,255,0.4);
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--cream);
+            border-radius: 9999px;
+            transition: width 0.5s ease;
+        }
+        .score-badge {
+            font-family: 'Mali', cursive;
+            background: var(--cream);
+            border: 2px solid var(--black);
+            border-radius: 9999px;
+            padding: 0.25rem 0.8rem;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--red);
+        }
+
+        /* SCENE IMAGE */
+        .scene-card {
+            background: var(--cream);
+            border-radius: 1.25rem;
+            border: 2.5px solid var(--black);
+            box-shadow: 5px 5px 0 var(--black);
+            overflow: hidden;
+            margin-bottom: 1rem;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .scene-card img { width: 100%; height: 100%; object-fit: cover; }
+        .no-img-placeholder { text-align: center; padding: 1.5rem; }
+        .no-img-placeholder .big-cat { font-size: 3rem; display: block; margin-bottom: 0.4rem; }
+        .no-img-placeholder p { font-size: 0.75rem; font-weight: 600; color: var(--red); letter-spacing: 0.1em; text-transform: uppercase; }
+
+        /* QUESTION CARD */
+        .question-card {
+            background: var(--white);
+            border-radius: 1.25rem;
+            border: 2.5px solid var(--black);
+            box-shadow: 5px 5px 0 var(--black);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .q-eyebrow {
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            font-size: 0.6rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--red);
+            margin-bottom: 0.4rem;
+        }
+        .q-text {
+            font-family: 'Mali', cursive;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--black);
+            line-height: 1.65;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px dashed rgba(212,43,43,0.2);
+        }
+        .a-eyebrow {
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            font-size: 0.6rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #777;
+            margin-bottom: 0.6rem;
+        }
+        #options-container { display: flex; flex-direction: column; gap: 0.5rem; }
+
+        /* ANSWER BUTTON */
+        .btn-answer {
+            font-family: 'Mali', cursive;
+            width: 100%;
+            text-align: left;
+            padding: 0.85rem 1rem;
+            border-radius: 0.85rem;
+            border: 2.5px solid var(--black);
+            background: var(--white);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--black);
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            box-shadow: 3px 3px 0 var(--black);
+            transition: background 0.12s;
+        }
+        .btn-answer:hover { background: var(--cream); }
+        .opt-label {
+            flex-shrink: 0;
+            width: 1.8rem; height: 1.8rem;
+            border-radius: 50%;
+            background: var(--red);
+            color: var(--cream);
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid var(--black);
+        }
+
+        /* SLIDE UP */
+        .slide-up { animation: slideUp 0.28s ease forwards; }
+        @keyframes slideUp {
+            from { transform: translateY(14px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+
+        /* RESULT SCREEN */
+        .result-header {
+            background: var(--red);
+            border-radius: 1.25rem;
+            border: 2.5px solid var(--black);
+            box-shadow: 5px 5px 0 var(--black);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .result-emoji-big { font-size: 3.5rem; display: block; margin-bottom: 0.5rem; }
+        .level-pill {
+            display: inline-block;
+            background: var(--cream);
+            color: var(--red);
+            border: 2.5px solid var(--black);
+            border-radius: 9999px;
+            padding: 0.35rem 1.2rem;
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 3px 3px 0 var(--black);
+        }
+        .result-desc { color: var(--cream); font-size: 0.9rem; line-height: 1.6; margin-top: 0.75rem; opacity: 0.9; }
+
+        .score-card {
+            background: var(--white);
+            border-radius: 1.25rem;
+            border: 2.5px solid var(--black);
+            box-shadow: 5px 5px 0 var(--black);
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        .score-card-header {
+            background: var(--black);
+            padding: 0.5rem 1.25rem;
+            font-family: 'Mali', cursive;
+            font-weight: 600;
+            font-size: 0.6rem;
+            letter-spacing: 0.2em;
+            color: var(--cream);
+            opacity: 0.8;
+            text-transform: uppercase;
+        }
+        .score-grid { display: grid; grid-template-columns: 1fr 1fr; border-top: 2.5px solid var(--black); }
+        .score-cell { padding: 1.25rem; text-align: center; }
+        .score-cell:first-child { border-right: 2.5px solid var(--black); }
+        .score-cell-label {
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            font-size: 0.6rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+        .score-cell-label.red { color: var(--red); }
+        .score-cell-label.blue { color: var(--blue); }
+        .score-big {
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            font-size: 2.4rem;
+            color: var(--black);
+        }
+        .score-fandom-row {
+            border-top: 2.5px solid var(--black);
+            padding: 0.85rem 1.25rem;
+            text-align: center;
+            background: var(--cream);
+            font-family: 'Mali', cursive;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* CHAMPION BANNER */
+        .champion-banner {
+            background: var(--blue);
+            border-radius: 1.25rem;
+            border: 2.5px solid var(--black);
+            box-shadow: 5px 5px 0 var(--black);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .champ-eyebrow {
+            font-family: 'Mali', cursive;
+            font-weight: 600;
+            font-size: 0.6rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--cream);
+            opacity: 0.7;
+            margin-bottom: 0.25rem;
+        }
+        .champ-label {
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--white);
+        }
+
+        /* LEADERBOARD */
+        .lb-card {
+            background: var(--white);
+            border-radius: 1.25rem;
+            border: 2.5px solid var(--black);
+            box-shadow: 5px 5px 0 var(--black);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .lb-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .lb-title-wrap { display: flex; align-items: center; gap: 0.5rem; }
+        .lb-title { font-family: 'Mali', cursive; font-weight: 700; font-size: 1rem; color: var(--black); }
+        .lb-sub { font-size: 0.72rem; color: #888; margin-top: 2px; }
+        .lb-meta { display: flex; align-items: center; gap: 0.5rem; }
+        .lb-loading { color: var(--red); font-size: 0.8rem; font-weight: 600; }
+        .ldots::after { content: ''; animation: ldAnim 1.2s infinite; }
+        @keyframes ldAnim { 0%{content:''} 33%{content:'.'} 66%{content:'..'} 100%{content:'...'} }
+
+        #leaderboard-container { display: flex; flex-direction: column; gap: 0.6rem; }
+
+        .lb-row {
+            background: var(--white);
+            border-radius: 0.85rem;
+            border: 2px solid var(--black);
+            padding: 0.9rem 1rem;
+            box-shadow: 3px 3px 0 var(--black);
+        }
+        .lb-row.is-me { background: var(--cream); border-color: var(--red); box-shadow: 3px 3px 0 var(--red); }
+        .lb-row-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+        .lb-left { display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0; }
+        .lb-rank { font-size: 1.1rem; flex-shrink: 0; }
+        .lb-icon { font-size: 1.1rem; flex-shrink: 0; }
+        .lb-name { font-family: 'Mali', cursive; font-weight: 700; font-size: 0.9rem; color: var(--black); }
+        .lb-me-badge {
+            font-family: 'Mali', cursive;
+            font-weight: 700;
+            font-size: 0.6rem;
+            background: var(--red);
+            color: var(--cream);
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+            border: 1.5px solid var(--black);
+        }
+        .lb-right { text-align: right; flex-shrink: 0; margin-left: 0.75rem; }
+        .lb-pct { font-family: 'Mali', cursive; font-weight: 700; font-size: 1.3rem; }
+        .lb-avg-label { font-size: 0.6rem; color: #999; }
+        .bar-track {
+            width: 100%; height: 8px;
+            background: rgba(0,0,0,0.08);
+            border-radius: 9999px;
+            overflow: hidden;
+            border: 1.5px solid var(--black);
+        }
+        .bar-fill { height: 100%; border-radius: 9999px; transition: width 1.1s cubic-bezier(0.34,1.56,0.64,1); }
+
+        /* ACTION BUTTONS */
+        .action-btns { display: flex; flex-direction: column; gap: 0.75rem; }
+        .btn-black {
+            font-family: 'Mali', cursive;
+            width: 100%;
+            padding: 1rem;
+            border-radius: 9999px;
+            border: 2.5px solid var(--black);
+            background: var(--black);
+            color: var(--white);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: box-shadow 0.15s;
+        }
+        .btn-black:hover { box-shadow: 6px 6px 0 rgba(0,0,0,0.3); }
+
+        /* FIREBASE STATUS */
+        .fb-status {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            font-family: 'Mali', cursive;
+            font-size: 0.6rem; font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            border: 1.5px solid var(--black);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .fb-status.connected    { background: #d1fae5; color: #065f46; }
+        .fb-status.connecting   { background: #fef9c3; color: #78350f; }
+        .fb-status.disconnected { background: #fee2e2; color: #7f1d1d; }
+        .fb-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .fb-status.connected .fb-dot    { background: #22c55e; animation: pulse 2s infinite; }
+        .fb-status.connecting .fb-dot   { background: #eab308; animation: pulse 1s infinite; }
+        .fb-status.disconnected .fb-dot { background: #ef4444; }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+        .crown { animation: bounce 1s infinite alternate; display: inline-block; }
+        @keyframes bounce { from{transform:translateY(0);} to{transform:translateY(-5px);} }
+    </style>
+</head>
+<body>
+<div id="app">
+
+<!-- ① START SCREEN -->
+<div id="start-screen">
+    <div class="header-strip">
+        <div class="header-top">
+            <div>
+                <div class="logo-mark"> EWB </div>
+                <div class="tagline">ลัลล์ไม่ชอบไวน์ (ไม่จริง) </div>
+            </div>
+            <div class="header-right">
+                <div class="series-label">EWB Series</div>
+                <div class="quiz-label">Quiz</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="intro-center">
+            <div class="cat-float">🕵️‍♀️</div>
+            <h1 class="quiz-title">ลองทายสิ<br>ประโยคต่อไปคืออะไร?</h1>
+            <div class="subtitle">Go ahead and guess what the next sentence is...</div>
+            <p class="intro-desc"> จะยากซักแค่ไหน มาลองดูกัน </p>
+        </div>
+
+        <div class="team-select-box">
+            <div class="team-select-label">🐾 เลือกทีมของคุณ</div>
+            <div class="team-grid">
+                <button class="team-btn" onclick="selectFandom('ทีมลัลล์', this)">
+                    <span class="team-emoji">🦊</span>
+                    <span class="team-name">ทีมลัลล์</span>
+                    <span class="check-ring">✓</span>
+                </button>
+                <button class="team-btn" onclick="selectFandom('ทีมไวน์', this)">
+                    <span class="team-emoji">🐯</span>
+                    <span class="team-name">ทีมไวน์</span>
+                    <span class="check-ring">✓</span>
+                </button>
+                <button class="team-btn" onclick="selectFandom('ทีมลัลล์ไวน์', this)">
+                    <span class="team-emoji">🦊🐯</span>
+                    <span class="team-name">ทีมลัลล์ไวน์</span>
+                    <span class="check-ring">✓</span>
+                </button>
+            </div>
+            <p id="select-hint" class="select-hint">กรุณาเลือกทีมก่อนนะครัชช 🐾</p>
+        </div>
+
+        <button id="start-btn" onclick="startQuiz()" disabled class="btn-primary">
+            มาเล่นกันเล้ย 🐱
+        </button>
+    </div>
+</div>
+
+
+<!-- ② QUIZ SCREEN -->
+<div id="quiz-screen" class="hidden">
+    <div class="header-strip">
+        <div class="quiz-header">
+            <div>
+                <div class="tagline">EWB QUIZ</div>
+                <div id="question-number" class="q-number">1 / 10</div>
+            </div>
+            <div class="progress-wrap">
+                <div class="progress-track">
+                    <div id="progress-fill" class="progress-fill" style="width:0%"></div>
+                </div>
+            </div>
+            <span id="score-display" class="score-badge">0 คะแนน</span>
+        </div>
+    </div>
+
+    <div class="scene-card">
+        <img id="scene-image" src="" alt="Scene" class="hidden"
+            onerror="this.classList.add('hidden'); document.getElementById('no-image-placeholder').classList.remove('hidden')">
+        <div id="no-image-placeholder" class="no-img-placeholder">
+            <span class="big-cat cat-float">🕵️‍♀️</span>
+            <p>ภาพประกอบฉาก</p>
+        </div>
+    </div>
+
+    <div class="question-card">
+        <div class="q-eyebrow">🎬 บทพูดที่กำหนดให้</div>
+        <p id="question-text" class="q-text">...</p>
+        <div class="a-eyebrow">🐾 เลือกประโยคต่อมาที่ถูกต้อง</div>
+        <div id="options-container"></div>
+    </div>
+</div>
+
+
+<!-- ③ RESULT SCREEN -->
+<div id="result-screen" class="hidden">
+    <div class="result-header">
+        <div class="logo-mark" style="font-size:2rem; margin-bottom:0.75rem; display:block;">EWB</div>
+        <div class="tagline" style="margin-bottom:1rem;"> </div>
+        <span id="result-emoji" class="result-emoji-big">🏆</span>
+        <span class="level-pill" id="result-title">...</span>
+        <p id="result-description" class="result-desc">...</p>
+    </div>
+
+    <div class="score-card">
+        <div class="score-card-header"> ผลคะแนนของคุณ</div>
+        <div class="score-grid">
+            <div class="score-cell">
+                <div class="score-cell-label red">คะแนนที่ได้</div>
+                <div class="score-big" id="final-score">0/10</div>
+            </div>
+            <div class="score-cell">
+                <div class="score-cell-label blue">ความแม่นยำ</div>
+                <div class="score-big" id="final-percent">0%</div>
+            </div>
+        </div>
+        <div class="score-fandom-row" id="fandom-tag"></div>
+    </div>
+
+    <div id="champion-banner" class="champion-banner hidden">
+        <div class="champ-eyebrow">🏆 แชมป์ตอนนี้</div>
+        <div class="champ-label" id="champion-label">กำลังโหลด...</div>
+    </div>
+
+    <div class="lb-card">
+        <div class="lb-top">
+            <div class="lb-title-wrap">
+                <span style="font-size:1.4rem;">🏅</span>
+                <div>
+                    <div class="lb-title">อันดับทีม</div>
+                    <div class="lb-sub">คะแนนเฉลี่ย · real-time</div>
+                </div>
+            </div>
+            <div class="lb-meta">
+                <span id="lb-loading" class="lb-loading ldots">โหลด</span>
+                <span id="fb-status" class="fb-status connecting">
+                    <span class="fb-dot"></span>
+                    <span id="fb-status-text">กำลังเชื่อมต่อ</span>
+                </span>
+            </div>
+        </div>
+        <div id="leaderboard-container"></div>
+    </div>
+
+    <div class="action-btns">
+        <button onclick="shareOnX()" class="btn-black">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="white">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.261 5.634 5.903-5.634Zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            แชร์ไปยัง X (Twitter)
+        </button>
+        <button onclick="location.reload()" class="btn-primary">🐾 เล่นใหม่อีกครั้ง</button>
+    </div>
+
+</div><!-- #app -->
+
+<footer style="text-align:center; padding: 1.5rem 1rem 2rem; max-width:480px; margin:0 auto;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:0.75rem; opacity:0.2;">
+        <div style="flex:1; height:1.5px; background:var(--black);"></div>
+        <span style="font-size:12px;">✦</span>
+        <div style="flex:1; height:1.5px; background:var(--black);"></div>
+    </div>
+    <p style="font-family:'Mali',cursive; font-size:0.75rem; color:#888; line-height:2; letter-spacing:0.04em;">
+        made by <span style="color:var(--red); font-weight:700;">littlebaecon</span>
+        <span style="color:#ccc; margin:0 4px;">·</span>
+        transcribed by <span style="color:var(--black); font-weight:700;">namkhor</span>
+    </p>
+</footer>
+
+<script>
+const firebaseConfig = {
+    apiKey:            "AIzaSyCmAJmkRNaTUZI84NBg7HRf-wy22caPzxk",
+    authDomain:        "ewb-screen-quiz.firebaseapp.com",
+    databaseURL:       "https://ewb-screen-quiz-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId:         "ewb-screen-quiz",
+    storageBucket:     "ewb-screen-quiz.firebasestorage.app",
+    messagingSenderId: "1021510337089",
+    appId:             "1:1021510337089:web:19929c43d7c9d7b4c23cc0"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+db.ref('.info/connected').on('value', snap => {
+    const el   = document.getElementById('fb-status');
+    const text = document.getElementById('fb-status-text');
+    if (!el) return;
+    if (snap.val()) { el.className = 'fb-status connected'; text.innerText = 'เชื่อมต่อแล้ว'; }
+    else            { el.className = 'fb-status disconnected'; text.innerText = 'ออฟไลน์'; }
+});
+
+const quizData = [
+    { q:"ไวน์ต้องรู้จักทุกคนที่จะร่วมงานอยู่แล้วสิคะ ไม่รู้นี่สิ แปลก...", img:"https://i.ibb.co/bgZwVLGq/1.jpg",
+      ans:"อะไรที่ยังไม่คุ้น ไวน์สละเวลาเรียนรู้อยู่แล้วค่ะ คนอื่นจะได้ทำงานง่าย",
+      wrong:["อะไรที่ยังไม่รู้ ไวน์สละเวลาเรียนรู้อยู่แล้วค่ะ ไม่เหมือนคุณลัลล์หรอก","อะไรที่ยังไม่คุ้น ไวน์เรียนรู้อยู่แล้วค่ะ ไม่เหมือนคนบางคนหรอก","อะไรที่ยังไม่รู้ ไวน์สละเวลาเรียนรู้อยู่แล้วค่ะ คนอื่นจะได้ทำงานได้"] },
+    { q:"คุณไวน์เมามากแล้วนะคะ กลับรถไฟฟ้าไม่น่าไหว เดี๋ยวลัลล์เรียกแท็กซี่ให้นะ", img:"https://i.ibb.co/x8rGmDLb/2.jpg",
+      ans:"ลัลล์อยากให้ไวน์กลับหรอ แต่ว่าไวน์ยังไม่ได้อยากกลับ",
+      wrong:["อยากให้ไวน์กลับหรอคะ แต่ว่าไวน์ยังไม่อยากกลับ","คุณลัลล์อยากให้ไวน์กลับหรอคะ แต่ว่าไวน์ยังไม่อยากกลับ","แต่ว่าลัลล์ก็เมาหนิ"] },
+    { q:"คุณก็เหมือนกันน่ะแหละ คุณก็ดื่มไปเยอะเหมือนกันหนิ", img:"https://i.ibb.co/YT2GVpY9/3.jpg",
+      ans:"ก็ใช่ แต่พอดีว่า เก็บทรงเก่งกว่าอะค่ะ",
+      wrong:["เยอะ แต่ก็ไม่เมาแบบคุณแล้วกันค่ะ","แต่เก็บทรงได้แล้วกันค่ะ","เยอะ แต่พอดีเก็บทรงเก่งกว่าคนแถวนี้อะค่ะ"] },
+    { q:"เอาพลาสเตอร์ไปแปะนะคะ จะได้กลับไปร่วมกิจกรรมได้อีก", img:"https://i.ibb.co/sp4n8zcX/4.jpg",
+      ans:"แผลยังไกลหัวใจตั้งเยอะ",
+      wrong:["แผลแค่นี้คงไม่เป็นอะไรมาก","แผลแค่นี้คงไม่สะเทือนคุณลัลล์หรอกค่ะ","แต่ไกลหัวใจขนาดนี้ คงไม่เป็นไรนะคะ"] },
+    { q:"จะว่าไปแล้วอะ เราไม่ได้คบกันอยู่", img:"https://i.ibb.co/VpCT4vRB/5.jpg",
+      ans:"ลัลล์ไม่เห็นต้องเอาคำพูดของไวน์ไปคิดมากเลย",
+      wrong:["ลัลล์ไม่เห็นต้องสนใจคำพูดไวน์ขนาดนี้เลย","ลัลล์ไม่เห็นต้องคิดมากเรื่องของไวน์เลย","ลัลล์ไม่เห็นต้องเก็บคำพูดไวน์ไปใส่ใจเลย"] },
+    { q:"สรุปว่าอันนี้ทำเพื่อตัวเองใช่ปะ", img:"https://i.ibb.co/1GHMKMJ0/6.jpg",
+      ans:"ไหนบอกว่ากลัวลัลล์เดือดร้อนไง",
+      wrong:["ไหนบอกว่าทำเพื่อลัลล์ไง","ไหนบอกว่าจะรอลัลล์ก่อนไง","ไหนบอกว่าไม่อยากให้ลัลล์เดือดร้อนไง"] },
+    { q:"ก็ไม่ได้ขอให้ทำปะ อะไรที่ลัลล์ไม่อยากทำ ก็ไม่ต้องทำให้ก็ได้หนิ", img:"https://i.ibb.co/F4zs5kKb/7.jpg",
+      ans:"ทำไมไวน์ต้องมารับผิดชอบความรู้สึกของลัลล์ด้วยทั้ง ๆ ที่ไวน์ไม่ได้ขออะ",
+      wrong:["มันเป็นหน้าที่ของไวน์หรอ ที่ต้องมารับผิดชอบความรู้สึกลัลล์ ทั้งที่ไวน์ไม่ได้ขออะ","มันเป็นความผิดไวน์หรอ ไวน์ไม่ได้ขอให้ลัลล์มาทำแบบนี้","ลัลล์มาทำดีกับไวน์เอง ทำไมไวน์ต้องมารับผิดชอบความรู้สึกลัลล์ด้วยอะ"] },
+    { q:"ส่วนยัยคุณจูนน่ะนะ ถ้ามันยังมากินหัวลัลล์อีก ครั้งหน้าไวน์จะด่าเอง", img:"https://i.ibb.co/n238ygp/8.jpg",
+      ans:"เราเป็นคนไทย อะไรยอมได้ก็อย่าไปยอม",
+      wrong:["ฆ่าได้ฆ่า","เป็นใครกล้ามาด่าลัลล์","เราอย่าไปยอมคนแบบนี้"] },
+    { q:"ขอนั่งด้วยได้ไหมคะ พอดีปวดหลัง // office syndrome หรอครับ", img:"https://i.ibb.co/2Yg0sCsF/9.jpg",
+      ans:"ปวดเวลาที่ต้องลดตัวไปคุยกับคนบางคนน่ะค่ะ",
+      wrong:["ปวดเวลาที่ต้องก้มตัวไปคุยกับคนชั้นต่ำน่ะค่ะ","ปวดเวลาที่ต้องลดตัวไปคุยกับคนแบบคุณกรณ์น่ะค่ะ","ปวดเพราะต้องลดตัวไปคุยกับคุณกรณ์น่ะค่ะ"] },
+    { q:"ไวน์ ลัลล์รู้นะ ว่าความรู้สึกของลัลล์มัน overwhelmed ไปสำหรับไวน์อะ", img:"https://i.ibb.co/twv1FZq5/10.jpg",
+      ans:"แต่ลัลล์ขอโทษนะที่ลัลล์รู้สึกไปแล้ว",
+      wrong:["แต่ลัลล์ขอโทษนะที่ลัลล์ล้ำเส้นไวน์อีกแล้ว","แต่ลัลล์ขอโทษนะที่ทำให้ไวน์อึดอัด","แต่ลัลล์ขอโทษนะที่ลัลล์ห้ามความรู้สึกตัวเองไม่ได้"] },
+];
+
+const FANDOM_CONFIG = {
+    'ทีมลัลล์'     : { icon:'🦊', textColor:'var(--red)',  key:'team_lal'  },
+    'ทีมไวน์'      : { icon:'🐯', textColor:'var(--blue)', key:'team_wine' },
+    'ทีมลัลล์ไวน์' : { icon:'🦊🐯', textColor:'#166534',    key:'team_both' },
+};
+const BAR_COLORS = ['var(--red)', 'var(--blue)', '#22c55e'];
+const RANK_ICONS = ['🥇','🥈','🥉'];
+const LABELS     = ['ก','ข','ค','ง'];
+
+let currentQ=0, score=0, selFandom=null, resTitle='', resEmoji='', shuffledQuiz=[];
+
+function selectFandom(name, el) {
+    selFandom = name;
+    document.querySelectorAll('.team-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('start-btn').disabled = false;
+    document.getElementById('select-hint').style.display = 'none';
+}
+
+function startQuiz() {
+    if (!selFandom) return;
+    shuffledQuiz = [...quizData].sort(() => Math.random() - 0.5);
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('quiz-screen').classList.remove('hidden');
+    renderQuestion();
+}
+
+function renderQuestion() {
+    const data = shuffledQuiz[currentQ];
+    const total = shuffledQuiz.length;
+    document.getElementById('question-number').innerText = `${currentQ+1} / ${total}`;
+    document.getElementById('progress-fill').style.width = `${((currentQ+1)/total)*100}%`;
+    document.getElementById('score-display').innerText = `${score} คะแนน`;
+    document.getElementById('question-text').innerText = data.q;
+
+    const imgEl = document.getElementById('scene-image');
+    const phEl  = document.getElementById('no-image-placeholder');
+    if (data.img) { imgEl.src=data.img; imgEl.classList.remove('hidden'); phEl.classList.add('hidden'); }
+    else          { imgEl.classList.add('hidden'); phEl.classList.remove('hidden'); }
+
+    const cont = document.getElementById('options-container');
+    cont.innerHTML = '';
+    const opts = [data.ans, ...data.wrong].sort(() => Math.random() - 0.5);
+    opts.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-answer slide-up';
+        btn.style.animationDelay = `${i * 0.07}s`;
+        btn.innerHTML = `<span class="opt-label">${LABELS[i]}</span><span>${opt}</span>`;
+        btn.onclick = () => {
+            if (opt === data.ans) score++;
+            currentQ++;
+            if (currentQ < total) renderQuestion(); else showFinalResult();
+        };
+        cont.appendChild(btn);
+    });
+}
+
+async function showFinalResult() {
+    document.getElementById('quiz-screen').classList.add('hidden');
+    document.getElementById('result-screen').classList.remove('hidden');
+    const total = shuffledQuiz.length;
+    const pct   = Math.round((score/total)*100);
+    let title='', desc='', emoji='';
+    if      (pct===100) { emoji='👸'; title='คนเขียนบทปลอมตัวมา';  desc='เก่งมาก มหัศจรรย์! คุณคือร่างอวตารของคนเขียนบทตัวจริง'; }
+    else if (pct>=80)   { emoji='👑'; title='มือรองคนเขียนบท';      desc='แม่นยำระดับมือโปร! อีกนิดเดียวก็สมบูรณ์แบบแล้ว'; }
+    else if (pct>=50)   { emoji='🍿'; title='ผู้ชมสายชิลล์';        desc='เริ่มคุ้นตาแล้วสิ! ลองทวนอีกรอบรับรองจำแม่นแน่นอน'; }
+    else                { emoji='✍️'; title='ไรเต้อท่านนึง';        desc='สายมโนตัวจริง! บทพล็อตของคุณไปไกลกว่าต้นฉบับแล้ว'; }
+    resTitle=title; resEmoji=emoji;
+    document.getElementById('result-emoji').innerText       = emoji;
+    document.getElementById('result-title').innerText       = title;
+    document.getElementById('result-description').innerText = desc;
+    document.getElementById('final-score').innerText        = `${score}/${total}`;
+    document.getElementById('final-percent').innerText      = `${pct}%`;
+    const cfg = FANDOM_CONFIG[selFandom] || { icon:'🐾', textColor:'var(--black)' };
+    const tag = document.getElementById('fandom-tag');
+    tag.style.color = cfg.textColor;
+    tag.innerHTML = `${cfg.icon} ${selFandom} — ความแม่นยำ <strong>${pct}%</strong>`;
+    await saveToFirebase(pct);
+    await renderLeaderboard();
+}
+
+async function saveToFirebase(pct) {
+    const cfg = FANDOM_CONFIG[selFandom]; if (!cfg) return;
+    try {
+        await db.ref(`quiz_stats/teams/${cfg.key}`).transaction(c => c===null ? {count:1,totalPct:pct} : {count:c.count+1,totalPct:c.totalPct+pct});
+        await db.ref('quiz_stats/global').transaction(c => c===null ? {totalPlayers:1,totalPct:pct} : {totalPlayers:c.totalPlayers+1,totalPct:c.totalPct+pct});
+    } catch(e) { console.error(e); }
+}
+
+async function renderLeaderboard() {
+    const loadEl = document.getElementById('lb-loading');
+    const cont   = document.getElementById('leaderboard-container');
+    try {
+        const snap  = await db.ref('quiz_stats').get();
+        const data  = snap.val() || {};
+        const teams = data.teams || {};
+        const rows  = Object.entries(FANDOM_CONFIG).map(([name, cfg]) => {
+            const t   = teams[cfg.key] || { count:0, totalPct:0 };
+            const avg = t.count>0 ? Math.round(t.totalPct/t.count) : 0;
+            return { name, cfg, avg, count:t.count };
+        }).sort((a,b) => b.avg-a.avg || b.count-a.count);
+        const maxAvg = rows[0]?.avg || 1;
+        const champ  = rows[0];
+        if (champ && champ.count>0) {
+            const banner = document.getElementById('champion-banner');
+            banner.classList.remove('hidden');
+            document.getElementById('champion-label').innerHTML =
+                `${champ.cfg.icon} ${champ.name}${champ.name===selFandom ? ' 🎉 (ทีมคุณ!)' : ''}`;
+        }
+        cont.innerHTML = rows.map((r,i) => {
+            const isMe   = r.name===selFandom;
+            const barPct = maxAvg>0 ? Math.round((r.avg/maxAvg)*100) : 0;
+            const hasData= r.count>0;
+            return `<div class="lb-row${isMe?' is-me':''}">
+                <div class="lb-row-top">
+                    <div class="lb-left">
+                        <span class="lb-rank${i===0&&hasData?' crown':''}">${RANK_ICONS[i]||'🔹'}</span>
+                        <span class="lb-icon">${r.cfg.icon}</span>
+                        <span class="lb-name">${r.name}</span>
+                        ${isMe?'<span class="lb-me-badge">ทีมคุณ</span>':''}
+                    </div>
+                    <div class="lb-right">
+                        <div class="lb-pct" style="color:${r.cfg.textColor}">${hasData?r.avg+'%':'—'}</div>
+                        <div class="lb-avg-label">เฉลี่ย</div>
+                    </div>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width:0%;background:${BAR_COLORS[i]||BAR_COLORS[2]}" data-target="${hasData?barPct:0}"></div>
+                </div>
+            </div>`;
+        }).join('');
+        loadEl.classList.add('hidden');
+        setTimeout(() => {
+            cont.querySelectorAll('.bar-fill').forEach(el => { el.style.width = el.dataset.target+'%'; });
+        }, 150);
+    } catch(e) {
+        console.error(e);
+        loadEl.innerText = 'โหลดไม่ได้';
+    }
+}
+
+function shareOnX() {
+    const total = shuffledQuiz.length;
+    const pct   = Math.round((score/total)*100);
+    const cfg   = FANDOM_CONFIG[selFandom] || { icon:'🐾' };
+    const text  = `ฉันทำควิซ "EWB Series ลองทายสิประโยคต่อไปคืออะไร" ได้ ${score}/${total} คะแนน (${pct}%) ${resEmoji}\nระดับ: ${resTitle}\n${cfg.icon} ${selFandom}\n\n#EnemiesWithBenefits #JanJingjing`;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+}
+</script>
+</body>
+</html>
